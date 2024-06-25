@@ -62,7 +62,6 @@ const SignIn = () => {
             value={form.password}
             handleChangeText={(e: string) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
-            keyboardType=""
             placeholder="Password"
           />
           <CustomButton
@@ -70,7 +69,6 @@ const SignIn = () => {
             handlePress={submit}
             containerStyles="mt-7"
             isLoading={isSubmitting}
-            textStyles=""
           />
           <View className="justify-center pt-5 flex-row gap-2">
             <Text className="text-lg text-gray-100 font-pregular">
