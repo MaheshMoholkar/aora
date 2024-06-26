@@ -54,4 +54,4 @@ export const GlobalProvider: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-export const useGlobalContext = () => useContext(AppContext);
+export const useAppContext = () => useContext(AppContext);
