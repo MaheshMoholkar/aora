@@ -5,6 +5,7 @@ import {
   Databases,
   ID,
   Query,
+  Storage,
 } from "react-native-appwrite";
 
 export const config = {
@@ -34,6 +35,7 @@ client.setEndpoint(endpoint).setProject(projectId).setPlatform(platform);
 const account = new Account(client);
 const avatars = new Avatars(client);
 const databases = new Databases(client);
+const storage = new Storage(client);
 
 export const createUser = async (
   email: string,
@@ -103,7 +105,9 @@ export const getCurrentUser = async () => {
 
 export const getAllPosts = async () => {
   try {
-    const posts = await databases.listDocuments(databaseId, videoCollectionId);
+    const posts = await databases.listDocuments(databaseId, videoCollectionId, [
+      Query.orderDesc("$createdAt"),
+    ]);
     return posts.documents;
   } catch (error: any) {
     throw new Error(error);
@@ -153,3 +157,90 @@ export const signOut = async () => {
     throw new Error(error);
   }
 };
+
+// Upload File
+export async function uploadFile(file: any, type: string) {
+  if (!file) return;
+
+  const asset = {
+    name: file.fileName,
+    type: file.mimeType,
+    size: file.fileSize,
+    uri: file.uri,
+  };
+
+  try {
+    const uploadedFile = await storage.createFile(
+      storageId,
+      ID.unique(),
+      asset
+    );
+
+    const fileUrl = await getFilePreview(uploadedFile.$id, type);
+    return fileUrl;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+// Get File Preview
+export async function getFilePreview(fileId: any, type: string) {
+  let fileUrl;
+
+  try {
+    if (type === "video") {
+      fileUrl = storage.getFileView(storageId, fileId);
+    } else if (type === "image") {
+      fileUrl = storage.getFilePreview(
+        storageId,
+        fileId,
+        2000,
+        2000,
+        // @ts-ignore
+        "top",
+        100
+      );
+    } else {
+      throw new Error("Invalid file type");
+    }
+
+    if (!fileUrl) throw Error;
+
+    return fileUrl;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+// Create Video Post
+export async function createVideoPost(form: {
+  thumbnail: any;
+  video: any;
+  title: any;
+  prompt: any;
+  userId: any;
+}) {
+  try {
+    const [thumbnailUrl, videoUrl] = await Promise.all([
+      uploadFile(form.thumbnail, "image"),
+      uploadFile(form.video, "video"),
+    ]);
+
+    const newPost = await databases.createDocument(
+      databaseId,
+      videoCollectionId,
+      ID.unique(),
+      {
+        title: form.title,
+        thumbnail: thumbnailUrl,
+        video: videoUrl,
+        prompt: form.prompt,
+        creator: form.userId,
+      }
+    );
+
+    return newPost;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}

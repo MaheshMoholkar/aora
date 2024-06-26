@@ -46,8 +46,10 @@ const TrendingItem = ({ activeItem, item }: any) => {
           useNativeControls
           shouldPlay
           onPlaybackStatusUpdate={(status) => {
-            console.log(status);
-            console.log(item.video);
+            // @ts-ignore
+            if (status.didJustFinish) {
+              setPlay(false);
+            }
           }}
         />
       ) : (
